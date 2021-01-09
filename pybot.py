@@ -1,10 +1,14 @@
 # import asyncio
 import os
-
 import discord
 import random
 from dotenv import load_dotenv
 from discord.ext import commands
+import logging
+
+logging.basicConfig(format="%(asctime)s"+" "*20+"%(levelname)s %(message)s")
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 load_dotenv()
 D_TOKEN = os.getenv("DISCORD_TOKEN")
@@ -60,6 +64,8 @@ class MessageModeration(commands.Cog):
     @commands.command(name="clear", help=("Deletes the specified number of "
                                           "channel messages. Defaults to 5."))
     async def clear(self, ctx, n=5):
+        author = ctx.author
+        logger.info(f"Running clear command, triggered by {author}")
         channel = ctx.message.channel
 
         try:
@@ -73,6 +79,8 @@ class MessageModeration(commands.Cog):
 
     @commands.command(name="purge", help="Purges all channel messages.")
     async def purge(self, ctx):
+        author = ctx.author
+        logger.info(f"Running purge command, triggered by {author}")
         channel = ctx.message.channel
         d = await channel.purge()
         await ctx.send(f"Deleted {len(d)} message(s).")
@@ -85,13 +93,29 @@ class FunCommands(commands.Cog):
                                          "integers."))
     async def roll(self, ctx, start, end):
         author = ctx.author
-        print(f"Running roll command, triggered by {author}")
+        logger.info(f"Running roll command, triggered by {author}")
         try:
             n = random.randint(int(start), int(end))
         except ValueError:
             await ctx.send("Please enter two numbers (non-float), e.g. 1-6!")
         else:
             await ctx.send(f"Between {start}-{end}, {author} rolled: {n}!")
+
+    @commands.command(name="8ball", help="Ask a question, any question!")
+    async def magic_8ball(self, ctx):
+        author = ctx.author
+        logger.info(f"Running magic_8ball command, triggered by {author}")
+        options = ["It is certain.", "It is decidedly so,",
+                   "Without a doubt.", "Yes – definitely.",
+                   "You may rely on it.", "As I see it, yes.",
+                   "Most likely.", "Outlook good.", "Yes.",
+                   "Signs point to yes.", "Reply hazy, try again.",
+                   "Ask again later.", "Better not tell you now.",
+                   "Cannot predict now.", "Concentrate and ask again.",
+                   "Don't count on it.", "My reply is no.",
+                   "My sources say no.", "Outlook not so good.",
+                   "Very doubtful."]
+        await ctx.send(f"{random.choice(options)}")
 
 
 class GeneralCommands(commands.Cog):
@@ -101,7 +125,7 @@ class GeneralCommands(commands.Cog):
                                              ))
     async def whereami(self, ctx):
         author = ctx.message.author
-        print(f"Running whereami command, triggered by {author}")
+        logger.info(f"Running whereami command, triggered by {author}")
         serv = discord.utils.get(bot.guilds, name=SERVER)
         await ctx.send(f"You are on {serv.name}, {author}!")
 
