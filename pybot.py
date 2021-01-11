@@ -1,10 +1,13 @@
 # import asyncio
 import os
+import sys
 import discord
 import random
 from dotenv import load_dotenv
 from discord.ext import commands
 import logging
+import requests
+from better_profanity import profanity
 
 logging.basicConfig(format="%(asctime)s"+" "*20+"%(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -45,9 +48,8 @@ async def on_member_join(member):
 
 @bot.event
 async def on_message(msg):
-    serv = discord.utils.get(bot.guilds, name=SERVER)
+    # serv = discord.utils.get(bot.guilds, name=SERVER)
     await bot.process_commands(msg)
-
     if msg.author == bot.user:
         return
 
@@ -55,8 +57,12 @@ async def on_message(msg):
         await msg.channel.send(f"Hi, {msg.author}!")
     if msg.content == "PyBot, are you working?":
         await msg.channel.send("Yes!")
-    if msg.content == "PyBot, what is this server's name?":
-        await msg.channel.send(f"This server's name is {serv.name}.")
+    if msg.content == "Go to sleep, PyBot.":
+        await msg.channel.send("Okay, going to sleep.")
+        sys.exit(1)
+
+    if profanity.contains_profanity(msg.content):
+        await msg.channel.send("Ooo, you said a bad word! Naughty naughty.")
 
 
 class MessageModeration(commands.Cog):
@@ -116,6 +122,47 @@ class FunCommands(commands.Cog):
                    "My sources say no.", "Outlook not so good.",
                    "Very doubtful."]
         await ctx.send(f"{random.choice(options)}")
+
+    @commands.command(name="qod", help=("Gives the quote of the day."
+                                        " optional argument: categories"))
+    async def qod(self, ctx, query=""):
+        quote_url = "https://quotes.rest"
+        author = ctx.author
+        logger.info(f"Running quote command, triggered by {author}")
+        if "categories" in query:
+            try:
+                r = requests.get(f"{quote_url}/qod/categories")
+            except r.status_code == 400:
+                await ctx.send((
+                    "Uh-oh! I can't get a category for you right now."
+                    " How about a cookie?"))
+            else:
+                cat = r.json()["contents"]["categories"]
+                cat_str = ""
+                for k in cat.keys():
+                    cat_str += k + ", "
+                await ctx.send(
+                    f"Categories available for quote of the day: {cat_str}")
+        elif len(query) > 1:
+            try:
+                r = requests.get(f"{quote_url}/qod?category={query}")
+            except r.status_code == 400:
+                await ctx.send((
+                    "Uh-oh! I can't get a category for you right now."
+                    " How about a cookie?"))
+            else:
+                quote = r.json()["contents"]["quotes"][0]
+                await ctx.send(f"\"{quote['quote']}\", by {quote['author']}")
+        else:
+            try:
+                r = requests.get(f"{quote_url}/qod")
+            except r.status_code == 400:
+                await ctx.send((
+                    "Uh-oh! I can't get a category for you right now."
+                    " How about a cookie?"))
+            else:
+                quote = r.json()["contents"]["quotes"][0]
+                await ctx.send(f"\"{quote['quote']}\", by {quote['author']}")
 
 
 class GeneralCommands(commands.Cog):
