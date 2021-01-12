@@ -16,6 +16,7 @@ logger.setLevel(logging.INFO)
 load_dotenv()
 D_TOKEN = os.getenv("DISCORD_TOKEN")
 SERVER = os.getenv("DISCORD_SERVER")
+RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
 
 intents = discord.Intents.default()
 intents.members = True
@@ -163,6 +164,32 @@ class FunCommands(commands.Cog):
             else:
                 quote = r.json()["contents"]["quotes"][0]
                 await ctx.send(f"\"{quote['quote']}\", by {quote['author']}")
+
+    @commands.command(name="urban", help="Grab instant Urban Dict results")
+    async def urban(self, ctx, *query):
+        ur = "https://mashape-community-urban-dictionary.p.rapidapi.com/define"
+        host = "mashape-community-urban-dictionary.p.rapidapi.com"
+        string = " ".join(query)
+        query_string = {"term": string}
+        headers = {
+            'x-rapidapi-key': RAPIDAPI_KEY,
+            'x-rapidapi-host': host
+        }
+        try:
+            r = requests.get(ur, headers=headers, params=query_string)
+        except r.status_code != 200:
+            await ctx.send("Unable to get an Urban response. Try again?")
+        else:
+            author = ctx.message.author
+            logger.info(f"Running urban command, triggered by {author}")
+            results = r.json()
+            definition = ""
+            for c in results["list"][0]["definition"]:
+                if c == "[" or c == "]":
+                    pass
+                else:
+                    definition += c
+            await ctx.send(definition)
 
 
 class GeneralCommands(commands.Cog):
