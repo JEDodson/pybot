@@ -182,11 +182,11 @@ class FunCommands(commands.Cog):
             logger.info(f"Running urban command, triggered by {author}")
             results = r.json()
             definition = ""
-            for c in results["list"][0]["definition"]:
-                if c == "[" or c == "]":
+            for x in results["list"][0]["definition"]:
+                if x == "[" or x == "]":
                     pass
                 else:
-                    definition += c
+                    definition += x
             await ctx.send(definition)
 
 
@@ -198,8 +198,13 @@ class GeneralCommands(commands.Cog):
     async def whereami(self, ctx):
         author = ctx.message.author
         logger.info(f"Running whereami command, triggered by {author}")
-        serv = discord.utils.get(bot.guilds, name=SERVER)
-        await ctx.send(f"You are on {serv.name}, {author}!")
+        serv = ctx.message.guild
+        await ctx.send(f"You are on {serv}, {author}!")
+
+    @commands.command("say", help="PyBot repeats whatever you tell it to.")
+    async def say(self, ctx, *echo):
+        say = " ".join(echo)
+        await ctx.send(say)
 
 
 class StarWarsCommands(commands.Cog):
