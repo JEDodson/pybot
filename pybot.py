@@ -5,9 +5,9 @@ import discord
 import random
 from dotenv import load_dotenv
 from discord.ext import commands
+from trivia_dict import TRIVIA_DICT
 import logging
 import requests
-from better_profanity import profanity
 
 logging.basicConfig(format="%(asctime)s"+" "*20+"%(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
@@ -23,6 +23,7 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
+current_question = {}
 
 @bot.event
 async def on_ready():
@@ -61,9 +62,6 @@ async def on_message(msg):
     if msg.content == "Go to sleep, PyBot.":
         await msg.channel.send("Okay, going to sleep.")
         sys.exit(1)
-
-    if profanity.contains_profanity(msg.content):
-        await msg.channel.send("Ooo, you said a bad word! Naughty naughty.")
 
 
 class MessageModeration(commands.Cog):
@@ -204,7 +202,37 @@ class GeneralCommands(commands.Cog):
         await ctx.send(f"You are on {serv.name}, {author}!")
 
 
+class StarWarsCommands(commands.Cog):
+    @commands.command(name="trivia", help="Random Star Wars trivia question")
+    async def trivia(self, ctx):
+        author = ctx.message.author
+        global current_question
+        random_qa = random.choice(list(TRIVIA_DICT.items()))
+        current_question[random_qa[0]] = random_qa[1]
+        string = (
+                  f"{author} asked for a Star Wars trivia question!"
+                  f" Your Question: {random_qa[0]}"
+                  " Use !answer (answer) to answer the question!")
+        logger.info(f"Running trivia command, triggered by {author}")
+        print(current_question)
+        await ctx.send(string)
+
+    @commands.command(name="answer", help="Answer a trivia question")
+    async def answer(self, ctx, *args):
+        author = ctx.message.author
+        user_answer = " ".join(args)
+        string = f"{author} answered correctly with {user_answer}! More?"
+        qa = list(current_question.items())[0] if current_question else None
+        if not current_question:
+            await ctx.send("There is no active trivia question right now!")
+        else:
+            if user_answer.lower() in qa[1].lower():
+                await ctx.send(string)
+                del current_question[qa[0]]
+
+
 bot.add_cog(FunCommands())
+bot.add_cog(StarWarsCommands())
 bot.add_cog(GeneralCommands())
 bot.add_cog(MessageModeration())
 bot.run(D_TOKEN, bot=True)

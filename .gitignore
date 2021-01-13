@@ -1,3 +1,4 @@
 denv/
 .env
 .vscode/
+__pycache__/
