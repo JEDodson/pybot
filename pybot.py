@@ -25,6 +25,7 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 
 current_question = {}
 
+
 @bot.event
 async def on_ready():
     serv = discord.utils.get(bot.guilds, name=SERVER)
