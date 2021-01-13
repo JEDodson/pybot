@@ -21,7 +21,7 @@ RAPIDAPI_KEY = os.getenv("RAPIDAPI_KEY")
 intents = discord.Intents.default()
 intents.members = True
 
-bot = commands.Bot(command_prefix="!", intents=intents)
+bot = commands.Bot(command_prefix="#", intents=intents)
 
 current_question = {}
 
